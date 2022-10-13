@@ -1,0 +1,77 @@
+Define the problem:
+
+We need to identify PCR duplicates from our allignment file (SAM). In order to do this we will 
+need to identify reads that have the same position 
+
+I will read in the file one line at a time and check if the line starts with a @, if not i will 
+separate the line by tab.
+
+then I will check the chromosome in column 3 and the leftmost start position in collumn 4, I 
+will check the bitwise flag in column 2 at the 16 position to check if reverse complient to 
+get the strand. while doing this we will need to account for the soft clipping by looking at 
+the CIGAR strand in the 6th column by subtracting any number that preceds the s from the start
+position. I will also need to check the UMI that is at the end of collumn 1. If all of these 
+things match then the read is a duplicate and one can be tossed out.
+
+once I have all of the duplicates removed I can write each line to a new SAM file
+
+_______________________________________________________________________________________________________
+
+pseudocode:
+
+read line by line
+    if line ^ != @:
+    #this will skip the firt few lines that are not reads
+        grab chrom, strand, position with soft clipping accounted for and UMI and store in a list
+        #I will have functions to get the needed information
+        if  UMI is an error:
+            list = []
+            skip
+        #if the UMI is an error do not save the list to the dict
+        elif line[Chrom] is not in dictionary:
+            write dict into new SAM file
+            dict = [] 
+        # this will empty the dictionary every chromosome so it doesn't get too big
+        elif not all position indicators and UMI match a previous read in the dictionary: 
+            write line to a dictionary
+        # this will write a line that is not a buplicate into the dictionary 
+        else:
+            skip
+        # this will make all lines that are matches not save to the dictionary
+    else:
+        write line to new SAM file
+        # this will get the top lines that are not reads into the new file
+_______________________________________________________________________________________________________
+
+High level functions:
+
+start:
+if line[6] ^ ##S:
+    soft_clip = ##
+    start_position = line[3] - soft_clip
+else:
+    start_position = line[3]
+return start_position
+
+start(line)
+in: line[6] = 4s, line[3]= 55
+out: 51
+
+in: line[6] = 4m, line[3]= 55
+out: 55
+
+strand:
+if line[2] & == 16:
+    return -
+else:
+    return +
+
+strand(line)
+in: line[2] = 83
+out: -
+
+in: line[2] = 67
+out: +
+
+
+
